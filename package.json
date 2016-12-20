@@ -1,0 +1,43 @@
+{
+  "name": "asteroids",
+  "version": "0.1.0",
+  "description": "Day 17 of my 3 weeks game challenge",
+  "main": "gulpfile.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "start": "gulp",
+    "test": "tape ./test/*.js | tap-spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zsoltime/asteroids.git"
+  },
+  "keywords": [
+    "game",
+    "challenge"
+  ],
+  "author": "Zsolt Meszaros",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "babel-preset-es2015": "^6.18.0",
+    "browser-sync": "^2.17.5",
+    "del": "^2.2.2",
+    "gulp": "^3.9.1",
+    "gulp-autoprefixer": "^3.1.1",
+    "gulp-babel": "^6.1.2",
+    "gulp-clean-css": "^2.0.13",
+    "gulp-jade": "^1.1.0",
+    "gulp-plumber": "^1.1.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-sass": "^2.3.2",
+    "gulp-sass-lint": "^1.2.0",
+    "gulp-uglify": "^2.0.0"
+  },
+  "bugs": {
+    "url": "https://github.com/zsoltime/asteroids/issues"
+  },
+  "homepage": "https://github.com/zsoltime/asteroids#readme"
+}
