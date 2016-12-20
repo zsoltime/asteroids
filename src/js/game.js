@@ -9,7 +9,7 @@ let stars = [];
 let shield;
 let energy = 100;
 let score = 0;
-let colorBg = '#141d28';
+let colorBg = '#171c27';
 let colorLaser = '#18ffff';
 let minAsteroidSize = 8;
 
@@ -59,8 +59,8 @@ function draw() {
           }
           score += Math.floor(40 - asteroids[j].size);
           console.log(score);
-          asteroids.splice(j, 1);
           lasers.splice(i, 1);
+          asteroids.splice(j, 1);
           break;
         }
       }
@@ -116,9 +116,9 @@ function Ship() {
       stroke(255);
     }
     beginShape();
-    vertex(-size, size);
-    vertex(size, size);
-    vertex(size, size);
+    vertex(-size * 0.75, size);
+    vertex(0, size * 0.25);
+    vertex(size * 0.75, size);
     vertex(0, -size);
     endShape(CLOSE);
     pop();
@@ -192,22 +192,17 @@ function Ship() {
 }
 
 function Asteroid(pos, size) {
-  if (pos) {
-    pos = pos.copy();
-  }
-  else {
-    pos = createVector(random(width), random(height));
-  }
-  if (size) {
-    size = size * 0.5
-  }
-  else {
-    size = random(15, 40);
-  }
-
+  let sizeMin = 15;
+  let sizeMax = 40;
   let vertexPoints = random(12, 25);
   let offset = [];
   let velocity = p5.Vector.random2D();
+
+  pos = pos ? pos.copy() : createVector(random(width), random(height));
+  size = size ? size * 0.5 : random(sizeMin, sizeMax);
+
+  // TODO: smaller ones should move faster
+  velocity.mult(sizeMax / (3 * size));
 
   for (let i = 0; i < vertexPoints; i++) {
     offset.push(random(-size * 0.2, size * 0.2));
