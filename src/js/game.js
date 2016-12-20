@@ -8,17 +8,19 @@ let lasers = [];
 let stars = [];
 let shield;
 let energy = 100;
-let score = 0;
+let score;
 let colorBg = '#171c27';
 let colorLaser = '#18ffff';
-let minAsteroidSize = 8;
+let minAsteroidSize = 10;
+let minAsteroidAmount = 5;
 
 function setup() {
   let canvas = createCanvas(windowWidth * 0.75, windowHeight * 0.75);
   canvas.parent(game);
   ship = Ship();
   shield = Shield();
-  for (let i = 0; i < 5; i++) {
+  score = Score();
+  for (let i = 0; i < minAsteroidAmount; i++) {
     asteroids.push(Asteroid());
   }
 
@@ -43,6 +45,10 @@ function draw() {
     asteroids[i].wraparound();
   }
 
+  if (asteroids.length < minAsteroidAmount) {
+    asteroids.push(Asteroid());
+  }
+
   for (let i = 0; i < lasers.length; i++) {
     lasers[i].render();
     lasers[i].update();
@@ -57,7 +63,7 @@ function draw() {
             let newAsteroids = asteroids[j].split();
             asteroids = asteroids.concat(newAsteroids);
           }
-          score += Math.floor(40 - asteroids[j].size);
+          score.add(Math.floor(40 - asteroids[j].size));
           console.log(score);
           lasers.splice(i, 1);
           asteroids.splice(j, 1);
@@ -73,6 +79,7 @@ function draw() {
   ship.wraparound();
 
   shield.render();
+  score.render();
 }
 
 function keyPressed() {
@@ -198,7 +205,7 @@ function Asteroid(pos, size) {
   let offset = [];
   let velocity = p5.Vector.random2D();
 
-  pos = pos ? pos.copy() : createVector(random(width), random(height));
+  pos = pos ? pos.copy() : createVector(2 * random(width), 2 * random(height));
   size = size ? size * 0.5 : random(sizeMin, sizeMax);
 
   // TODO: smaller ones should move faster
@@ -274,7 +281,6 @@ function Laser(start, angle) {
     push();
     stroke(colorLaser);
     strokeWeight(1);
-    // point(pos.x, pos.y);
     line(pos.x, pos.y, pos.x + size * Math.cos(angle), pos.y + size * Math.sin(angle));
     pop();
   }
@@ -329,6 +335,33 @@ function Shield() {
   }
 
   return {
+    render: render
+  }
+}
+
+function Score() {
+  let pos = createVector(width - 100, height - 20);
+  let score = 0;
+
+  function reset() {
+    score = 0;
+  }
+
+  function add(points) {
+    score += points
+  }
+
+  function render() {
+    push();
+    textSize(14);
+    fill(colorLaser);
+    text(`Score: ${score}`, pos.x, pos.y);
+    pop();
+  }
+
+  return {
+    add: add,
+    reset: reset,
     render: render
   }
 }
