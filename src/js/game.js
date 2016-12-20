@@ -5,47 +5,60 @@ const game = document.getElementById('game');
 let ship;
 let asteroids = [];
 let lasers = [];
+let stars = [];
+let shield;
+let energy = 100;
+let score = 0;
+let colorBg = '#141d28';
+let colorLaser = '#18ffff';
+let minAsteroidSize = 8;
 
 function setup() {
-  let canvas = createCanvas(600, 400);
+  let canvas = createCanvas(windowWidth * 0.75, windowHeight * 0.75);
   canvas.parent(game);
   ship = Ship();
+  shield = Shield();
   for (let i = 0; i < 5; i++) {
     asteroids.push(Asteroid());
   }
+
+  for (let i = 0; i < width / 10; i++) {
+    stars.push(Star());
+  }
+  fill(colorBg);
 }
 
 function draw() {
-  background(33);
-  ship.render();
-  ship.turn();
-  ship.update();
-  ship.edges();
+  clear();
+  for (let i = 0; i < stars.length; i++) {
+    stars[i].render();
+  }
 
   for (let i = 0; i < asteroids.length; i++) {
     if (ship.hit(asteroids[i])) {
-      console.log('died');
+      energy -= 0.5;
     }
     asteroids[i].render();
     asteroids[i].update();
-    asteroids[i].edges();
+    asteroids[i].wraparound();
   }
 
   for (let i = 0; i < lasers.length; i++) {
     lasers[i].render();
     lasers[i].update();
 
-    if (lasers[i].invisible()) {
+    if (lasers[i].isOffscreen()) {
       lasers.splice(i, 1);
     }
     else {
       for (let j = asteroids.length - 1; j >= 0; j--) {
         if (lasers[i].hit(asteroids[j])) {
-          if (asteroids[j].size > 10) {
+          if (asteroids[j].size > minAsteroidSize) {
             let newAsteroids = asteroids[j].split();
             asteroids = asteroids.concat(newAsteroids);
           }
-          // increase score
+          score += Math.floor(40 - asteroids[j].size);
+          console.log(score);
           asteroids.splice(j, 1);
           lasers.splice(i, 1);
           break;
@@ -53,6 +66,13 @@ function draw() {
       }
     }
   }
+
+  ship.render();
+  ship.turn();
+  ship.update();
+  ship.wraparound();
+
+  shield.render();
 }
 
 function keyPressed() {
@@ -82,14 +102,25 @@ function Ship() {
   let rotation = 0;
   let velocity = createVector(1, 0);
   let isBoosting = false;
+  let isDying = false;
 
   function render() {
     push();
     translate(pos.x, pos.y);
     rotate(heading + Math.PI / 2);
-    noFill();
-    stroke(255);
-    triangle(-size, size, size, size, 0, -size);
+      console.log(isDying)
+    if (isDying) {
+      stroke(255, random(0, 255));
+    }
+    else {
+      stroke(255);
+    }
+    beginShape();
+    vertex(-size, size);
+    vertex(size, size);
+    vertex(size, size);
+    vertex(0, -size);
+    endShape(CLOSE);
     pop();
   }
 
@@ -115,7 +146,7 @@ function Ship() {
     rotation = angle;
   }
 
-  function edges() {
+  function wraparound() {
     if (pos.x > width + size) {
       pos.x = -size;
     }
@@ -136,7 +167,14 @@ function Ship() {
 
   function hit(asteroid) {
     let d = dist(pos.x, pos.y, asteroid.pos.x, asteroid.pos.y);
-    return d < size + asteroid.size;
+    if (d < size + asteroid.size) {
+      isDying = true;
+      return true;
+    }
+    else {
+      isDying = false;
+      return false;
+    }
   }
 
   return {
@@ -146,7 +184,7 @@ function Ship() {
     update: update,
     boost: boost,
     hit: hit,
-    edges: edges,
+    wraparound: wraparound,
     pos: pos,
     size: size,
     heading: _ => heading // ???
@@ -167,19 +205,17 @@ function Asteroid(pos, size) {
     size = random(15, 40);
   }
 
-
-  let vertexPoints = random(15, 25);
+  let vertexPoints = random(12, 25);
   let offset = [];
   let velocity = p5.Vector.random2D();
 
   for (let i = 0; i < vertexPoints; i++) {
-    offset.push(random(-size / 4, size / 4));
+    offset.push(random(-size * 0.2, size * 0.2));
   }
 
   function render() {
     push();
     translate(pos.x, pos.y);
-    noFill();
     stroke(255);
     beginShape();
     for (let i = 0; i < vertexPoints; i++) {
@@ -196,13 +232,14 @@ function Asteroid(pos, size) {
     pos.add(velocity);
   }
 
-  function edges() {
+  function wraparound() {
     if (pos.x > width + size) {
       pos.x = -size;
     }
     else if (pos.x < -size) {
       pos.x = width + size;
     }
+
     if (pos.y > height + size) {
       pos.y = -size;
     }
@@ -222,7 +259,7 @@ function Asteroid(pos, size) {
     render: render,
     update: update,
     split: split,
-    edges: edges,
+    wraparound: wraparound,
     pos: pos,
     size: size
   }
@@ -230,6 +267,7 @@ function Asteroid(pos, size) {
 
 function Laser(start, angle) {
   let pos = createVector(start.x, start.y);
+  let size = 20;
   let velocity = p5.Vector.fromAngle(angle);
   velocity.mult(10);
 
@@ -239,9 +277,10 @@ function Laser(start, angle) {
 
   function render() {
     push();
-    stroke(255);
-    strokeWeight(4);
-    point(pos.x, pos.y);
+    stroke(colorLaser);
+    strokeWeight(1);
+    // point(pos.x, pos.y);
+    line(pos.x, pos.y, pos.x + size * Math.cos(angle), pos.y + size * Math.sin(angle));
     pop();
   }
 
@@ -250,7 +289,7 @@ function Laser(start, angle) {
     return d < asteroid.size;
   }
 
-  function invisible() {
+  function isOffscreen() {
     return (pos.x > width || pos.x < 0 || pos.y > height || pos.y < 0);
   }
 
@@ -258,6 +297,43 @@ function Laser(start, angle) {
     render: render,
     update: update,
     hit: hit,
-    invisible: invisible
+    isOffscreen: isOffscreen
+  }
+}
+
+function Star() {
+  let pos = createVector(random(width), random(height));
+  let alpha = random(50, 255);
+  let weight = random(1, 4);
+
+  function render() {
+    push();
+    stroke(255, alpha);
+    strokeWeight(weight);
+    point(pos.x, pos.y);
+    pop();
+  }
+
+  return {
+    render: render
+  }
+}
+
+function Shield() {
+  let pos = {
+    x: 20,
+    y: height - 20
+  }
+
+  function render() {
+    push();
+    stroke(colorLaser);
+    strokeWeight(4);
+    line(pos.x, pos.y, pos.x + energy, pos.y);
+    pop();
+  }
+
+  return {
+    render: render
   }
 }
